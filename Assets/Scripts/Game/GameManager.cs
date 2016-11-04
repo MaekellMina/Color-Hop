@@ -159,11 +159,11 @@ public class GameManager : MonoBehaviour
     {
         if(b_pass)
         {
-            // If user has passed the level
+            // If user has won
         }
         else
         {
-            // If user has failed the level
+            // If user has failed 
         }
         yield return null;
     }
