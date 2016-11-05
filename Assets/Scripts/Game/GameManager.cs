@@ -1,6 +1,24 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System;
+
+public enum HopColor
+{
+    RED,
+    BLUE,
+    YELLOW
+}
+
+public class Constants
+{
+    //hop targets spawnable bounds
+    public const float MAX_SPAWNABLE_X = 2f;
+    public const float MIN_SPAWNABLE_X = -2f;
+    public const float MAX_SPAWNABLE_Y = 2.5f;
+    public const float MIN_SPAWNABLE_Y = -1.5f;
+
+    public const int NUMBER_OF_HOPCOLORS = 3;
+}
+
 
 public class GameManager : MonoBehaviour
 {
@@ -27,10 +45,15 @@ public class GameManager : MonoBehaviour
     bool callOnce = true;                   // Used when changing the game state bool for calling function/code once in the game
 
     //--------public game fields
-
+    public GameObject player;               // reference to player token AKA Hopper
+    public GameObject basicHopTargetPrefab; // prefab for a basic hop target
+    public Color redAppearance;
+    public Color blueAppearance;
+    public Color yellowAppearance;
 
     //--------private game fields
-
+    private Vector2 restPos;                // idle position every after hop, also start position
+    private HopTarget curHopTarget;         // target to hop on to 
 
     void Awake()
     {
@@ -51,6 +74,13 @@ public class GameManager : MonoBehaviour
         // Do necessary initialization here
         // put here the initializations that should not be called when game resets (WE DO NOT RELOAD SCENE WHEN RESETTING GAME)
 
+        restPos = player.transform.position;
+
+        //create hop targets pool
+        for(int i = 0; i < 10; i++)     // 10 basic hop targets
+        {
+            CacheManager.Store("Basic_HopTarget", Instantiate(basicHopTargetPrefab) as GameObject);
+        }
 
         //for these to work, EventManager.cs must be on the hierarchy
         EventsManager.OnGameReset.AddListener(OnGameReset);
@@ -96,7 +126,8 @@ public class GameManager : MonoBehaviour
                     // -- Put codes that are needed to be called only once -- //
                     //Do the setup for the game here.
 
-
+                    gameScore = 0;
+                    player.transform.position = restPos;
                     
                     //
                     callOnce = false;
@@ -108,9 +139,7 @@ public class GameManager : MonoBehaviour
                 if (callOnce)
                 {
                     // -- Put codes that are needed to be called only once -- //
-
-
-
+                    SpawnHopTarget();
                     //
                     callOnce = false;
                 }
@@ -173,6 +202,17 @@ public class GameManager : MonoBehaviour
     {
         // put updates here for when in in-game state
     }
+
+    void SpawnHopTarget()
+    {
+        GameObject hopTargetInstance = CacheManager.ActivateRandom("Basic_HopTarget");
+        curHopTarget.transform.position = new Vector2(Random.Range(Constants.MIN_SPAWNABLE_X, Constants.MAX_SPAWNABLE_X), Random.Range(Constants.MIN_SPAWNABLE_Y, Constants.MAX_SPAWNABLE_Y));
+        int colorIndex = Random.Range(0, Constants.NUMBER_OF_HOPCOLORS);
+        curHopTarget.HopColor = (HopColor)colorIndex;
+        curHopTarget.SetColorAppearance();
+
+    }
+
 
     void SETPATH()
     {
