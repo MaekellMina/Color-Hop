@@ -147,25 +147,27 @@ public class GameManager : MonoBehaviour
             case GAMESTATES.INIT:
                 if(callOnce)
                 {
-                    // -- Put codes that are needed to be called only once -- //
-                    //Do the setup for the game here.
-
-                    gameScore = 0;
-                    UpdateScore(gameScore);
-                    player.transform.position = restPos;
-                    hopperState = HOPPERSTATES.IDLE;
+                    
 
                     //
                     callOnce = false;
-                    //change gamestate after running init once
-                    ChangeGameState(GAMESTATES.INGAME);
                 }
+                // -- Put codes that are needed to be called only once -- //
+                //Do the setup for the game here.
+                b_gameover = false;
+                gameScore = 0;
+                UpdateScore(gameScore);
+                player.transform.position = restPos;
+                hopperState = HOPPERSTATES.IDLE;
+
+                ChangeGameState(GAMESTATES.INGAME);
+
+                //change gamestate after running init once
                 break;
             case GAMESTATES.INGAME:
                 if (callOnce)
                 {
                     // -- Put codes that are needed to be called only once -- //
-
                     //
                     callOnce = false;
                 }
@@ -189,7 +191,7 @@ public class GameManager : MonoBehaviour
                 {
                     // -- Put codes that are needed to be called only once -- //
                     b_gameover = true;
-
+                    Debug.Log("GAME OVER");
                     StartCoroutine(GameOver());
                     //
                     callOnce = false;
@@ -200,24 +202,24 @@ public class GameManager : MonoBehaviour
     }
     public void ChangeGameState(int state)  //for button click event (just in case)
     {
-        gameState = (GAMESTATES)state;
         callOnce = true;
+        gameState = (GAMESTATES)state;
     }
     public void ChangeGameState(GAMESTATES state)
     {
-        gameState = state;
+
         callOnce = true;        // Set to true so every time the state change, there's a place to call some code once in the loop
+        gameState = state;
     }
     public void ChangeHopperState(HOPPERSTATES state)
     {
-        hopperState = state;
         callOnce2 = true;
+        hopperState = state;
     }
     #endregion
 
     IEnumerator GameOver()
     {
-        ChangeGameState(GAMESTATES.INIT);
         if(b_pass)
         {
             // If user has won
@@ -226,6 +228,9 @@ public class GameManager : MonoBehaviour
         {
             // If user has failed 
         }
+        Debug.Log("RESTARTING GAME");
+        gameHUD.WhiteToFade(1);
+        ChangeGameState(GAMESTATES.INIT);
         yield return null;
     }
 
@@ -371,6 +376,8 @@ public class GameManager : MonoBehaviour
         else
         {
             //missed
+            curHopTarget.Explode();
+            curHopTarget = null;
             EventsManager.OnGameOver.Invoke();
         }
 
