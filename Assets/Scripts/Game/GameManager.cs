@@ -50,10 +50,15 @@ public class GameManager : MonoBehaviour
     public Color redAppearance;
     public Color blueAppearance;
     public Color yellowAppearance;
+    public HUD gameHUD;                     // game HUD
+    public AnimationCurve hopperScaleAnimationCurve;
 
     //--------private game fields
     private Vector2 restPos;                // idle position every after hop, also start position
     private HopTarget curHopTarget;         // target to hop on to 
+    private HopColor hopperColor;           // current color of the player
+    private SpriteRenderer hopperSprite;    // reference to the sprite renderer of player
+    private Coroutine hopCoroutine;         //reference to hop coroutine
 
     void Awake()
     {
@@ -75,6 +80,7 @@ public class GameManager : MonoBehaviour
         // put here the initializations that should not be called when game resets (WE DO NOT RELOAD SCENE WHEN RESETTING GAME)
 
         restPos = player.transform.position;
+        hopperSprite = player.GetComponent<SpriteRenderer>();
 
         //create hop targets pool
         for(int i = 0; i < 10; i++)     // 10 basic hop targets
@@ -139,7 +145,7 @@ public class GameManager : MonoBehaviour
                 if (callOnce)
                 {
                     // -- Put codes that are needed to be called only once -- //
-                    SpawnHopTarget();
+
                     //
                     callOnce = false;
                 }
@@ -201,19 +207,65 @@ public class GameManager : MonoBehaviour
     void Game()
     {
         // put updates here for when in in-game state
+        if (!curHopTarget)
+            SpawnHopTarget();
+
+        
     }
 
     void SpawnHopTarget()
     {
-        GameObject hopTargetInstance = CacheManager.ActivateRandom("Basic_HopTarget");
+        curHopTarget = CacheManager.ActivateRandom("Basic_HopTarget").GetComponent<HopTarget>();
         curHopTarget.transform.position = new Vector2(Random.Range(Constants.MIN_SPAWNABLE_X, Constants.MAX_SPAWNABLE_X), Random.Range(Constants.MIN_SPAWNABLE_Y, Constants.MAX_SPAWNABLE_Y));
         int colorIndex = Random.Range(0, Constants.NUMBER_OF_HOPCOLORS);
-        curHopTarget.HopColor = (HopColor)colorIndex;
-        curHopTarget.SetColorAppearance();
+        curHopTarget.CurHopColor = (HopColor)colorIndex;
+        curHopTarget.sprite.color = SetColorAppearance(curHopTarget.CurHopColor);
 
     }
+    // call to start coroutine Hop
+    public void StartHop(int colorIndex)
+    {
+        hopperColor = (HopColor)colorIndex;
+        hopperSprite.color = SetColorAppearance(hopperColor);
+        hopCoroutine = StartCoroutine(Hop());   // start hopping
+    }
+    public Color SetColorAppearance(HopColor hopColor)
+    {
+        switch (hopColor)
+        {
+            case HopColor.RED:
+                return redAppearance;
+            case HopColor.BLUE:
+                return blueAppearance;
+            case HopColor.YELLOW:
+                return yellowAppearance;
+            default:
+                return Color.white;
+        }
+    }
+    // animate hopping
+    IEnumerator Hop()
+    {
+        float targetYPos = curHopTarget.transform.position.y;
+        float t_percent = 0;
+        float distanceToHop = targetYPos - player.transform.position.y;     //initial distance to be travelled by hopper to reach current hop target
+        //while player not reached same y pos with target, move closer
+        while(targetYPos > player.transform.position.y)
+        {
+            player.transform.Translate(Vector2.up * (targetYPos - player.transform.position.y) * 5 * Time.deltaTime);
+            //animate scaling
+            t_percent = (player.transform.position.y - restPos.y) / distanceToHop;      //percent of distance travelled in decimal
+            player.transform.localScale = Vector2.one * hopperScaleAnimationCurve.Evaluate(t_percent);
+
+            yield return null;
+        }
+
+        // this is the moment when player reached the target
+        //put collision conditions here
 
 
+        Debug.Log("Done hopping!");
+    }
     void SETPATH()
     {
 #if UNITY_EDITOR
