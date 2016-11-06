@@ -229,6 +229,7 @@ public class GameManager : MonoBehaviour
             // If user has failed 
         }
         Debug.Log("RESTARTING GAME");
+        gameHUD.WhiteToFade(1);
         ChangeGameState(GAMESTATES.INIT);
         yield return null;
     }
