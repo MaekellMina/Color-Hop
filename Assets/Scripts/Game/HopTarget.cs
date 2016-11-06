@@ -13,5 +13,8 @@ public class HopTarget : MonoBehaviour
         hopColor = HopColor.RED;
     }
 
-    
+    public void Explode()
+    {
+        CacheManager.Store("Basic_HopTarget", this.gameObject);
+    }
 }

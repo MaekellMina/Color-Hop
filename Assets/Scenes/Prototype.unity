@@ -482,31 +482,35 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Path: 
   gameState: 0
+  hopperState: 0
+  playerStrifeDir: 0
   player: {fileID: 1681820357}
+  playerRadius: 0.5
+  strifeSpeed: 2.5
   basicHopTargetPrefab: {fileID: 1000012701498340, guid: 07d6d2d3e35fb1e4a922c3c1de1d071f,
     type: 2}
   redAppearance: {r: 1, g: 0.41176468, b: 0.41176468, a: 1}
   blueAppearance: {r: 0.52205884, g: 0.70334685, b: 1, a: 1}
   yellowAppearance: {r: 1, g: 0.9423935, b: 0.47794116, a: 1}
-  gameHUD: {fileID: 0}
+  gameHUD: {fileID: 83622974}
   hopperScaleAnimationCurve:
     serializedVersion: 2
     m_Curve:
     - time: -0.004531326
       value: 4.500314
-      inSlope: 2.8696823
-      outSlope: 2.8696823
-      tangentMode: 10
-    - time: 0.4995995
-      value: 5.9470096
-      inSlope: -0.29595578
-      outSlope: -0.29595578
+      inSlope: 6.1386294
+      outSlope: 6.1386294
+      tangentMode: 0
+    - time: 0.5439881
+      value: 5.8879757
+      inSlope: -0.5936457
+      outSlope: -0.5936457
       tangentMode: 10
     - time: 0.9142857
       value: 4.511534
-      inSlope: -3.4615939
-      outSlope: -3.4615939
-      tangentMode: 10
+      inSlope: -27.771887
+      outSlope: -27.771887
+      tangentMode: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
@@ -911,7 +915,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
