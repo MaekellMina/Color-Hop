@@ -358,7 +358,8 @@ public class GameManager : MonoBehaviour
         //put collision conditions here
 
         Debug.Log("CHECKING COLLISION");
-        if (curHopTarget.GetComponent<Collider2D>() == Physics2D.OverlapCircle(player.transform.position, playerRadius))
+        if (curHopTarget.GetComponent<Collider2D>() == Physics2D.OverlapCircle(player.transform.position, playerRadius) &&
+            hopperColor == curHopTarget.CurHopColor)
         {
             //successful hit
             curHopTarget.Explode();
