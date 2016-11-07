@@ -77,6 +77,7 @@ public class GameManager : MonoBehaviour
     private HopColor hopperColor;           // current color of the player
     private SpriteRenderer hopperSprite;    // reference to the sprite renderer of player
     private Coroutine hopCoroutine;         //reference to hop coroutine
+    private TrailRenderer hopperTrail;      // trail effect for the hopper
 
     void Awake()
     {
@@ -99,6 +100,8 @@ public class GameManager : MonoBehaviour
 
         restPos = player.transform.position;
         hopperSprite = player.GetComponent<SpriteRenderer>();
+        hopperTrail = player.GetComponent<TrailRenderer>();
+        hopperTrail.enabled = false;
 
         //create hop targets pool
         for(int i = 0; i < 10; i++)     // 10 basic hop targets
@@ -325,6 +328,9 @@ public class GameManager : MonoBehaviour
             hopperSprite.color = SetColorAppearance(hopperColor);
             ChangeHopperState(HOPPERSTATES.HOPPING);
             hopCoroutine = StartCoroutine(Hop());   // start hopping
+            hopperTrail.enabled = true;
+            Material trailMat = hopperTrail.material;
+            trailMat.SetColor("_Color", SetColorAppearance(hopperColor));
         }
     }
     public Color SetColorAppearance(HopColor hopColor)
@@ -348,49 +354,72 @@ public class GameManager : MonoBehaviour
         float targetYPos = curHopTarget.transform.position.y;
         float t_percent = 0;
         float distanceToHop = targetYPos - player.transform.position.y;     //initial distance to be travelled by hopper to reach current hop target
+
+        bool hasHit = false;
         //while player not reached same y pos with target, move closer
         while(System.Math.Round(targetYPos,1) > System.Math.Round(player.transform.position.y, 1))
         {
-            player.transform.Translate(Vector2.up * (targetYPos - player.transform.position.y) * 5 * Time.deltaTime);
+            player.transform.Translate(Vector2.up * 25 * Time.deltaTime);
             //animate scaling
             t_percent = (player.transform.position.y - restPos.y) / distanceToHop;      //percent of distance travelled in decimal
             player.transform.localScale = Vector2.one * hopperScaleAnimationCurve.Evaluate(t_percent);
             Debug.Log(targetYPos + " " + player.transform.position.y);
+
+            //check collisions while approaching
+            if (curHopTarget.GetComponent<Collider2D>() == Physics2D.OverlapCircle(player.transform.position, playerRadius) &&
+            hopperColor == curHopTarget.CurHopColor)
+            {
+                //successful hit
+                curHopTarget.Explode();
+                Camera.main.GetComponent<CameraShake>().Shake(.1f, .02f);
+                curHopTarget = null;
+                StartCoroutine(ReturnToRestPos());
+                gameScore++;
+                UpdateScore(gameScore);
+                hasHit = true;
+                player.transform.localScale = Vector2.one * hopperScaleAnimationCurve.Evaluate(1);
+                break;
+            }
             yield return null;
         }
 
         // this is the moment when player reached the target
         //put collision conditions here
 
-        Debug.Log("CHECKING COLLISION");
-        if (curHopTarget.GetComponent<Collider2D>() == Physics2D.OverlapCircle(player.transform.position, playerRadius) &&
-            hopperColor == curHopTarget.CurHopColor)
+        if (!hasHit)
         {
-            //successful hit
-            curHopTarget.Explode();
-            curHopTarget = null;
-            StartCoroutine(ReturnToRestPos());
-            gameScore++;
-            UpdateScore(gameScore);
+            Debug.Log("CHECKING COLLISION");
+            if (curHopTarget.GetComponent<Collider2D>() == Physics2D.OverlapCircle(player.transform.position, playerRadius) &&
+                hopperColor == curHopTarget.CurHopColor)
+            {
+                //successful hit
+                curHopTarget.Explode();
+                Camera.main.GetComponent<CameraShake>().Shake(.1f, .02f);
+                curHopTarget = null;
+                StartCoroutine(ReturnToRestPos());
+                gameScore++;
+                UpdateScore(gameScore);
+            }
+            else
+            {
+                //missed
+                curHopTarget.Explode();
+                curHopTarget = null;
+                EventsManager.OnGameOver.Invoke();
+            }
         }
-        else
-        {
-            //missed
-            curHopTarget.Explode();
-            curHopTarget = null;
-            EventsManager.OnGameOver.Invoke();
-        }
-
 
         Debug.Log("Done hopping!");
     }
     IEnumerator ReturnToRestPos()
     {
+        hopperTrail.enabled = false;
         while (System.Math.Round(player.transform.position.y, 1) > System.Math.Round(restPos.y, 1))
         {
-            player.transform.position = Vector2.Lerp(player.transform.position, restPos, 3 * Time.deltaTime);
+            player.transform.Translate(Vector2.down * 25 * Time.deltaTime);
             yield return null;
         }
+        player.transform.position = new Vector2(player.transform.position.x, restPos.y);
         Debug.Log("RETURNED TO REST POS");
         ChangeHopperState(HOPPERSTATES.STRIFING);
     }
